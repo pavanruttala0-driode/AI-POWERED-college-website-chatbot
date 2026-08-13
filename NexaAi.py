@@ -16,7 +16,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-API_KEY = st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY"))
+# Get API key from .env (local) OR Streamlit Secrets (deployed)
+API_KEY = os.getenv("OPENAI_API_KEY")
+
+if not API_KEY:
+    try:
+        API_KEY = st.secrets["OPENAI_API_KEY"]
+    except Exception:
+        API_KEY = None
 
 if API_KEY:
     client = OpenAI(api_key=API_KEY)
@@ -31,16 +38,12 @@ else:
 st.markdown("""
 <style>
 
-/* ---------- Global ---------- */
-
 .stApp {
     background:
         radial-gradient(circle at 10% 10%, rgba(99,102,241,0.10), transparent 25%),
         radial-gradient(circle at 90% 20%, rgba(14,165,233,0.10), transparent 25%),
         #f8fafc;
 }
-
-/* ---------- Hide Streamlit UI ---------- */
 
 #MainMenu {
     visibility: hidden;
@@ -54,14 +57,10 @@ header {
     background: transparent !important;
 }
 
-/* ---------- Sidebar ---------- */
-
 section[data-testid="stSidebar"] {
     background: rgba(255,255,255,0.88);
     border-right: 1px solid #e2e8f0;
 }
-
-/* ---------- Brand ---------- */
 
 .brand {
     font-size: 30px;
@@ -88,8 +87,6 @@ section[data-testid="stSidebar"] {
     margin-top: -4px;
 }
 
-/* ---------- Hero ---------- */
-
 .hero {
     text-align: center;
     padding: 55px 20px 25px 20px;
@@ -111,8 +108,6 @@ section[data-testid="stSidebar"] {
     font-size: 18px;
     margin-top: 5px;
 }
-
-/* ---------- Feature cards ---------- */
 
 .feature-card {
     background: rgba(255,255,255,0.85);
@@ -143,20 +138,14 @@ section[data-testid="stSidebar"] {
     font-size: 13px;
 }
 
-/* ---------- Chat messages ---------- */
-
 [data-testid="stChatMessage"] {
     border-radius: 18px;
     margin-bottom: 12px;
 }
 
-/* ---------- Input ---------- */
-
 [data-testid="stChatInput"] {
     border-radius: 18px;
 }
-
-/* ---------- Buttons ---------- */
 
 .stButton > button {
     border-radius: 12px;
@@ -170,8 +159,6 @@ section[data-testid="stSidebar"] {
     border-color: #6366f1;
     color: #4f46e5;
 }
-
-/* ---------- Footer ---------- */
 
 .footer {
     text-align: center;
@@ -214,17 +201,14 @@ with st.sidebar:
     st.divider()
 
     if st.button("＋  New Chat", use_container_width=True):
-
         st.session_state.messages = []
         st.rerun()
 
     st.markdown("### 🕘 Recent Chats")
 
     if st.session_state.chat_history:
-
         for chat in st.session_state.chat_history[-5:]:
             st.caption("• " + chat)
-
     else:
         st.caption("Your conversations will appear here.")
 
@@ -294,10 +278,7 @@ if not st.session_state.messages:
         </div>
         """, unsafe_allow_html=True)
 
-        if st.button(
-            "Try: Explain AI",
-            use_container_width=True
-        ):
+        if st.button("Try: Explain AI", use_container_width=True):
             st.session_state.pending_question = (
                 "Explain artificial intelligence in simple words."
             )
@@ -314,10 +295,7 @@ if not st.session_state.messages:
         </div>
         """, unsafe_allow_html=True)
 
-        if st.button(
-            "Try: Teach me Python",
-            use_container_width=True
-        ):
+        if st.button("Try: Teach me Python", use_container_width=True):
             st.session_state.pending_question = (
                 "Teach me Python programming from the beginning."
             )
@@ -334,10 +312,7 @@ if not st.session_state.messages:
         </div>
         """, unsafe_allow_html=True)
 
-        if st.button(
-            "Try: Give me an idea",
-            use_container_width=True
-        ):
+        if st.button("Try: Give me an idea", use_container_width=True):
             st.session_state.pending_question = (
                 "Give me an innovative project idea."
             )
@@ -364,7 +339,6 @@ question = st.chat_input(
     "Ask NexaAI anything..."
 )
 
-
 if "pending_question" in st.session_state:
 
     question = st.session_state.pending_question
@@ -386,21 +360,21 @@ if question:
     with st.chat_message("user", avatar="👤"):
         st.markdown(question)
 
-    with st.chat_message("assistant", avatar="🤖"):
+    with st.chat_message("assistant", avatar="✦"):
 
         if not client:
 
             answer = """
 ### ⚠️ AI service not connected
 
-Please add your API key to the `.env` file:
+Your OpenAI API key was not found.
 
-`OPENAI_API_KEY=your_api_key_here`
+For Streamlit Cloud, add this to your app's Secrets:
 
-Then restart the application.
+`OPENAI_API_KEY = "your_api_key_here"`
 """
 
-            st.markdown(answer)
+            st.error(answer)
 
         else:
 
@@ -429,8 +403,7 @@ answer using headings and bullet points.
 Never intentionally provide false information.
 """
                             }
-                        ] +
-                        st.session_state.messages,
+                        ] + st.session_state.messages,
 
                         temperature=0.4
                     )
@@ -443,12 +416,12 @@ Never intentionally provide false information.
 
             except Exception as e:
 
-                answer = (
-                    "Sorry, I couldn't process that request. "
-                    "Please check your API configuration."
-                )
+                answer = "Sorry, I couldn't process that request."
 
                 st.error(answer)
+
+                # SHOW THE REAL API ERROR
+                st.exception(e)
 
     st.session_state.messages.append({
         "role": "assistant",
