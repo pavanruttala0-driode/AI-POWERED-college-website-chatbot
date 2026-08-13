@@ -1,445 +1,124 @@
 import os
+import json
 import streamlit as st
-from dotenv import load_dotenv
-from openai import OpenAI
 
-# =========================================================
-# CONFIG
-# =========================================================
-
-load_dotenv()
-
+# Page Setup
 st.set_page_config(
-    page_title="NexaAI",
-    page_icon="✦",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="Apex Tech University | AI Assistant",
+    page_icon="🎓",
+    layout="wide"
 )
 
-# Get API key from .env (local) OR Streamlit Secrets (deployed)
-API_KEY = os.getenv("OPENAI_API_KEY")
-
-if not API_KEY:
+# Load Knowledge Base
+KNOWLEDGE_PATH = os.path.join(os.path.dirname(__file__), 'knowledge.json')
+@st.cache_data
+def load_knowledge():
     try:
-        API_KEY = st.secrets["OPENAI_API_KEY"]
+        with open(KNOWLEDGE_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
     except Exception:
-        API_KEY = None
+        return {}
 
-if API_KEY:
-    client = OpenAI(api_key=API_KEY)
-else:
-    client = None
+KNOWLEDGE_BASE = load_knowledge()
 
+# Retrieve API Key from Streamlit Secrets or Environment
+api_key = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
 
-# =========================================================
-# CUSTOM CSS
-# =========================================================
+gemini_client = None
+if api_key and api_key != "your_gemini_api_key_here":
+    try:
+        from google import genai
+        gemini_client = genai.Client(api_key=api_key)
+    except Exception as e:
+        st.sidebar.warning(f"Gemini Init Warning: {e}")
 
-st.markdown("""
-<style>
+SYSTEM_INSTRUCTION = f"""
+You are "ApexAI", the official AI Admissions Counselor & Student Assistant for Apex Tech University.
+Use the following Knowledge Base to answer student questions concisely with markdown bullet points:
+{json.dumps(KNOWLEDGE_BASE, indent=2)}
+"""
 
-.stApp {
-    background:
-        radial-gradient(circle at 10% 10%, rgba(99,102,241,0.10), transparent 25%),
-        radial-gradient(circle at 90% 20%, rgba(14,165,233,0.10), transparent 25%),
-        #f8fafc;
-}
+def local_fallback_reply(query):
+    q = query.lower()
+    if any(k in q for k in ["program", "course", "degree", "cs", "mba"]):
+        return "🎓 **Degree Programs:** B.S. Computer Science ($28,500/yr), B.S. Data Science & AI ($28,500/yr), Executive MBA ($34,000/yr)."
+    if any(k in q for k in ["apply", "admission", "requirement", "deadline"]):
+        return "📋 **Admissions:** High School GPA 3.0+, Transcripts, 1 Recommendation letter.\n⏳ **Deadlines:** Fall Early Action: Nov 1 | Fall Regular: Feb 15."
+    if any(k in q for k in ["fee", "scholarship", "aid"]):
+        return "💰 **Scholarships:** Apex Academic Excellence (Up to $15,000/yr), STEM Leadership Fund ($10,000/yr)."
+    return "Welcome to **Apex Tech University**! How can I assist your educational journey today?"
 
-#MainMenu {
-    visibility: hidden;
-}
-
-footer {
-    visibility: hidden;
-}
-
-header {
-    background: transparent !important;
-}
-
-section[data-testid="stSidebar"] {
-    background: rgba(255,255,255,0.88);
-    border-right: 1px solid #e2e8f0;
-}
-
-.brand {
-    font-size: 30px;
-    font-weight: 800;
-    letter-spacing: -1px;
-}
-
-.brand-icon {
-    display: inline-flex;
-    width: 42px;
-    height: 42px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 14px;
-    background: linear-gradient(135deg,#6366f1,#06b6d4);
-    color: white;
-    margin-right: 8px;
-    box-shadow: 0 8px 25px rgba(99,102,241,0.25);
-}
-
-.tagline {
-    color: #64748b;
-    font-size: 14px;
-    margin-top: -4px;
-}
-
-.hero {
-    text-align: center;
-    padding: 55px 20px 25px 20px;
-}
-
-.hero-icon {
-    font-size: 55px;
-}
-
-.hero-title {
-    font-size: 42px;
-    font-weight: 800;
-    letter-spacing: -1.5px;
-    margin-top: 8px;
-}
-
-.hero-subtitle {
-    color: #64748b;
-    font-size: 18px;
-    margin-top: 5px;
-}
-
-.feature-card {
-    background: rgba(255,255,255,0.85);
-    border: 1px solid #e2e8f0;
-    border-radius: 18px;
-    padding: 20px;
-    height: 125px;
-    box-shadow: 0 8px 25px rgba(15,23,42,0.05);
-    transition: 0.2s;
-}
-
-.feature-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(15,23,42,0.09);
-}
-
-.feature-icon {
-    font-size: 25px;
-}
-
-.feature-title {
-    font-weight: 700;
-    margin-top: 8px;
-}
-
-.feature-text {
-    color: #64748b;
-    font-size: 13px;
-}
-
-[data-testid="stChatMessage"] {
-    border-radius: 18px;
-    margin-bottom: 12px;
-}
-
-[data-testid="stChatInput"] {
-    border-radius: 18px;
-}
-
-.stButton > button {
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    background: white;
-    font-weight: 600;
-    transition: 0.2s;
-}
-
-.stButton > button:hover {
-    border-color: #6366f1;
-    color: #4f46e5;
-}
-
-.footer {
-    text-align: center;
-    color: #94a3b8;
-    font-size: 12px;
-    padding: 20px;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-
-# =========================================================
-# SESSION STATE
-# =========================================================
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-
-
-# =========================================================
-# SIDEBAR
-# =========================================================
-
+# Sidebar
 with st.sidebar:
+    st.title("🎓 Apex Tech University")
+    st.caption("Silicon Valley Campus • San Jose, CA")
+    st.markdown("---")
+    st.subheader("🏛️ Campus Overview")
+    col1, col2 = st.columns(2)
+    col1.metric("Students", "14,500+")
+    col1.metric("Acceptance", "38%")
+    col2.metric("Placement", "96%")
+    col2.metric("Max Grant", "$15K/yr")
 
-    st.markdown("""
-    <div class="brand">
-        <span class="brand-icon">✦</span>
-        NexaAI
-    </div>
-    <div class="tagline">
-        Ask naturally. Get intelligent answers.
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("---")
+    st.subheader("📩 Request Info")
+    with st.form("inquiry_form", clear_on_submit=True):
+        name = st.text_input("Full Name")
+        email = st.text_input("Email Address")
+        prog = st.selectbox("Program", ["B.S. Computer Science", "B.S. Data Science & AI", "Executive MBA"])
+        if st.form_submit_button("Submit Inquiry"):
+            if name and email:
+                st.success(f"Thank you {name}! Admissions will email you at {email}.")
+            else:
+                st.error("Please enter your name and email.")
 
-    st.divider()
+# Main Interface
+st.title("Apex Tech University AI Assistant")
+st.caption("Interactive Admissions Counselor powered by Google Gemini 3.6 Flash API")
 
-    if st.button("＋  New Chat", use_container_width=True):
-        st.session_state.messages = []
-        st.rerun()
+# Quick Action Prompt Chips
+st.markdown("**⚡ Quick Prompts:**")
+chip_cols = st.columns(4)
+preset_input = None
+if chip_cols[0].button("📋 Admission Criteria"):
+    preset_input = "What are the undergraduate admission requirements and deadlines?"
+if chip_cols[1].button("💰 Scholarships & Fees"):
+    preset_input = "Tell me about tuition fees and available scholarships."
+if chip_cols[2].button("🎓 Computer Science"):
+    preset_input = "What courses and careers are included in B.S. Computer Science?"
+if chip_cols[3].button("🏠 Campus Life"):
+    preset_input = "Tell me about housing, dorms, and campus organizations."
 
-    st.markdown("### 🕘 Recent Chats")
+# Chat History
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "assistant", "content": "Welcome to **Apex Tech University**! 🎓\n\nI am ApexAI. Ask me anything about our degree programs, admissions criteria, scholarships, or campus life!"}
+    ]
 
-    if st.session_state.chat_history:
-        for chat in st.session_state.chat_history[-5:]:
-            st.caption("• " + chat)
-    else:
-        st.caption("Your conversations will appear here.")
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"], avatar="🤖" if msg["role"] == "assistant" else "👤"):
+        st.markdown(msg["content"])
 
-    st.divider()
+user_query = st.chat_input("Ask ApexAI about courses, fees, admissions...") or preset_input
 
-    st.markdown("### ⚙️ Settings")
-
-    dark_mode = st.toggle("🌙 Dark mode")
-
-    st.divider()
-
-    st.caption("NexaAI v1.0")
-    st.caption("AI-powered conversational assistant")
-
-
-# =========================================================
-# TOP BAR
-# =========================================================
-
-top1, top2 = st.columns([8, 1])
-
-with top1:
-    st.markdown(
-        "**✦ NexaAI**  ·  Intelligent AI Assistant"
-    )
-
-with top2:
-    st.markdown("🔒")
-
-
-# =========================================================
-# WELCOME SCREEN
-# =========================================================
-
-if not st.session_state.messages:
-
-    st.markdown("""
-    <div class="hero">
-
-        <div class="hero-icon">✦</div>
-
-        <div class="hero-title">
-            What can I help you with?
-        </div>
-
-        <div class="hero-subtitle">
-            Ask questions, learn concepts, generate ideas,
-            or find information.
-        </div>
-
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.write("")
-
-    c1, c2, c3 = st.columns(3)
-
-    with c1:
-
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">💡</div>
-            <div class="feature-title">Ask Anything</div>
-            <div class="feature-text">
-                Get clear answers to your questions.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        if st.button("Try: Explain AI", use_container_width=True):
-            st.session_state.pending_question = (
-                "Explain artificial intelligence in simple words."
-            )
-
-    with c2:
-
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">📚</div>
-            <div class="feature-title">Learn</div>
-            <div class="feature-text">
-                Understand difficult topics easily.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        if st.button("Try: Teach me Python", use_container_width=True):
-            st.session_state.pending_question = (
-                "Teach me Python programming from the beginning."
-            )
-
-    with c3:
-
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">🚀</div>
-            <div class="feature-title">Create</div>
-            <div class="feature-text">
-                Generate ideas, plans and content.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        if st.button("Try: Give me an idea", use_container_width=True):
-            st.session_state.pending_question = (
-                "Give me an innovative project idea."
-            )
-
-
-# =========================================================
-# DISPLAY CHAT HISTORY
-# =========================================================
-
-for message in st.session_state.messages:
-
-    with st.chat_message(
-        message["role"],
-        avatar="👤" if message["role"] == "user" else "✦"
-    ):
-        st.markdown(message["content"])
-
-
-# =========================================================
-# USER INPUT
-# =========================================================
-
-question = st.chat_input(
-    "Ask NexaAI anything..."
-)
-
-if "pending_question" in st.session_state:
-
-    question = st.session_state.pending_question
-
-    del st.session_state.pending_question
-
-
-# =========================================================
-# AI RESPONSE
-# =========================================================
-
-if question:
-
-    st.session_state.messages.append({
-        "role": "user",
-        "content": question
-    })
-
+if user_query:
+    st.session_state.messages.append({"role": "user", "content": user_query})
     with st.chat_message("user", avatar="👤"):
-        st.markdown(question)
+        st.markdown(user_query)
 
     with st.chat_message("assistant", avatar="🤖"):
-
-        if not client:
-
-            answer = """
-### ⚠️ AI service not connected
-
-Your OpenAI API key was not found.
-
-For Streamlit Cloud, add this to your app's Secrets:
-
-`OPENAI_API_KEY = "your_api_key_here"`
-"""
-
-            st.error(answer)
-
-        else:
-
+        if gemini_client:
             try:
+                context = "".join([f"{'User' if m['role']=='user' else 'ApexAI'}: {m['content']}\n" for m in st.session_state.messages[-6:]])
+                resp = gemini_client.interactions.create(
+                    model="gemini-3.6-flash",
+                    input=f"{SYSTEM_INSTRUCTION}\n\nHistory:\n{context}\nUser: {user_query}\nApexAI:"
+                )
+                bot_reply = resp.output_text or local_fallback_reply(user_query)
+            except Exception:
+                bot_reply = local_fallback_reply(user_query)
+        else:
+            bot_reply = local_fallback_reply(user_query)
 
-                with st.spinner("Thinking..."):
-
-                    response = client.chat.completions.create(
-
-                        model="gpt-4o-mini",
-
-                        messages=[
-                            {
-                                "role": "system",
-                                "content": """
-You are NexaAI, a helpful, intelligent,
-friendly and accurate AI assistant.
-
-Give clear and useful answers.
-
-Use simple language when possible.
-
-For complex questions, organize the
-answer using headings and bullet points.
-
-Never intentionally provide false information.
-"""
-                            }
-                        ] + st.session_state.messages,
-
-                        temperature=0.4
-                    )
-
-                answer = response.choices[0].message.content
-
-                st.markdown(answer)
-
-                st.caption("✦ Generated by NexaAI")
-
-            except Exception as e:
-
-                answer = "Sorry, I couldn't process that request."
-
-                st.error(answer)
-
-                # SHOW THE REAL API ERROR
-                st.exception(e)
-
-    st.session_state.messages.append({
-        "role": "assistant",
-        "content": answer
-    })
-
-    st.session_state.chat_history.append(
-        question[:45]
-    )
-
-
-# =========================================================
-# FOOTER
-# =========================================================
-
-st.markdown("""
-<div class="footer">
-    ✦ NexaAI &nbsp; • &nbsp;
-    Ask Naturally. Get Intelligent Answers.
-</div>
-""", unsafe_allow_html=True)
+        st.markdown(bot_reply)
+        st.session_state.messages.append({"role": "assistant", "content": bot_reply})
