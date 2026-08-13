@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-API_KEY = os.getenv("OPENAI_API_KEY")
+API_KEY = st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY"))
 
 if API_KEY:
     client = OpenAI(api_key=API_KEY)
