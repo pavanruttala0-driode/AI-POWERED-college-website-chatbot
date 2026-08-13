@@ -4,7 +4,7 @@ import streamlit as st
 
 # Page Setup
 st.set_page_config(
-    page_title="NexGen  | AI Assistant",
+    page_title="NexGen | AI Assistant",
     page_icon="🎓",
     layout="wide"
 )
