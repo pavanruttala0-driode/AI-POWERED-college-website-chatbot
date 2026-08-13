@@ -33,7 +33,7 @@ if api_key and api_key != "your_gemini_api_key_here":
         st.sidebar.warning(f"Gemini Init Warning: {e}")
 
 SYSTEM_INSTRUCTION = f"""
-You are "ApexAI", the official AI Admissions Counselor & Student Assistant for Apex Tech University.
+You are "NexGenAI", the official AI Admissions Counselor & Student Assistant for colleges
 Use the following Knowledge Base to answer student questions concisely with markdown bullet points:
 {json.dumps(KNOWLEDGE_BASE, indent=2)}
 """
@@ -50,7 +50,7 @@ def local_fallback_reply(query):
 
 # Sidebar
 with st.sidebar:
-    st.title("🎓 Apex Tech University")
+    st.title("🎓 NexGenAI")
     st.caption("Silicon Valley Campus • San Jose, CA")
     st.markdown("---")
     st.subheader("🏛️ Campus Overview")
@@ -73,7 +73,7 @@ with st.sidebar:
                 st.error("Please enter your name and email.")
 
 # Main Interface
-st.title("Apex Tech University AI Assistant")
+st.title("NexGen AI Assistant")
 st.caption("Interactive Admissions Counselor powered by Google Gemini 3.6 Flash API")
 
 # Quick Action Prompt Chips
@@ -92,14 +92,14 @@ if chip_cols[3].button("🏠 Campus Life"):
 # Chat History
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Welcome to **Apex Tech University**! 🎓\n\nI am ApexAI. Ask me anything about our degree programs, admissions criteria, scholarships, or campus life!"}
+        {"role": "assistant", "content": "Welcome to **NexGen**! 🎓\n\nI am NexGen AI. Ask me anything about our degree programs, admissions criteria, scholarships, or campus life!"}
     ]
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar="🤖" if msg["role"] == "assistant" else "👤"):
         st.markdown(msg["content"])
 
-user_query = st.chat_input("Ask ApexAI about courses, fees, admissions...") or preset_input
+user_query = st.chat_input("Ask NexGen AI about courses, fees, admissions...") or preset_input
 
 if user_query:
     st.session_state.messages.append({"role": "user", "content": user_query})
