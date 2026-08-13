@@ -1,8 +1,8 @@
 # 🎓 AI-Powered College Website Chatbot
 
-An AI-powered conversational chatbot designed to help students, parents, applicants, faculty, and visitors quickly access information about a college.
+An AI-powered chatbot designed to help students, parents, applicants, faculty, and visitors quickly find information about a college.
 
-The chatbot uses the **Google Gemini API** to understand natural-language questions and provide intelligent, conversational responses through a user-friendly web interface.
+The chatbot uses the **Google Gemini API** to understand natural-language questions and provide intelligent responses through a user-friendly Streamlit interface.
 
 ---
 
@@ -10,9 +10,7 @@ The chatbot uses the **Google Gemini API** to understand natural-language questi
 
 College websites contain a large amount of information about admissions, courses, fees, scholarships, departments, facilities, placements, examinations, and campus services.
 
-Finding specific information can sometimes require searching through multiple pages.
-
-The **AI-Powered College Website Chatbot** provides a simple solution: users can ask questions naturally and receive instant AI-powered responses.
+Instead of searching through multiple pages, users can simply ask the chatbot a question and receive an AI-generated response.
 
 ### Example
 
@@ -22,33 +20,23 @@ The **AI-Powered College Website Chatbot** provides a simple solution: users can
 
 **Chatbot:**
 
-> The college offers various undergraduate and postgraduate programs. You can ask me about a specific course or department for more details.
+> The college offers various undergraduate and postgraduate programs. You can ask me about a specific course or department for more information.
 
 ---
 
 ## 🎯 Problem Statement
 
-Students and visitors often spend a lot of time searching through college websites to find specific information.
+Students and visitors often spend a lot of time searching college websites for specific information.
 
-Common questions include:
-
-* How do I apply for admission?
-* What courses are available?
-* What are the eligibility requirements?
-* What is the fee structure?
-* Are scholarships available?
-* Does the college provide hostel facilities?
-* What are the placement opportunities?
-
-The chatbot aims to provide a faster and more convenient way to access this information.
+The chatbot provides a simple conversational solution that allows users to ask questions naturally and get quick responses.
 
 ---
 
 ## 💡 Proposed Solution
 
-The chatbot provides an AI-powered conversational interface where users can ask college-related questions in natural language.
+The **AI-Powered College Website Chatbot** provides a conversational interface powered by the **Google Gemini API**.
 
-The **Gemini API** processes the user's question and generates an appropriate response.
+Users can ask questions about the college, and the chatbot processes the question and generates an appropriate response.
 
 ---
 
@@ -71,7 +59,7 @@ The **Gemini API** processes the user's question and generates an appropriate re
 
 ### 💰 Fees & Scholarships
 
-* Fee-related information
+* Fee information
 * Scholarship information
 * Financial assistance questions
 
@@ -82,7 +70,7 @@ The **Gemini API** processes the user's question and generates an appropriate re
 * Hostel
 * Canteen
 * Transportation
-* Campus facilities
+* Other campus facilities
 
 ### 💼 Placements
 
@@ -110,9 +98,8 @@ The **Gemini API** processes the user's question and generates an appropriate re
 
 * **Python** — Programming language
 * **Streamlit** — Web application framework
-* **Google Gemini API** — AI model and natural-language processing
-* **python-dotenv** — Environment variable management
-* **HTML/CSS** — User interface customization
+* **Google Gemini API** — Artificial intelligence and natural-language processing
+* **HTML/CSS** — User interface design
 
 ---
 
@@ -125,7 +112,7 @@ The **Gemini API** processes the user's question and generates an appropriate re
                              │
                              ▼
                   ┌─────────────────────┐
-                  │ Streamlit Web App   │
+                  │   Streamlit Web App │
                   │    Chat Interface   │
                   └──────────┬──────────┘
                              │
@@ -136,13 +123,14 @@ The **Gemini API** processes the user's question and generates an appropriate re
                              │
                              ▼
                   ┌─────────────────────┐
-                  │    Gemini API       │
-                  │   AI Processing     │
+                  │     Gemini API      │
+                  │    AI Processing    │
                   └──────────┬──────────┘
                              │
                              ▼
                   ┌─────────────────────┐
-                  │  Generated Answer   │
+                  │   AI Generated      │
+                  │      Response       │
                   └──────────┬──────────┘
                              │
                              ▼
@@ -160,12 +148,16 @@ AI-Powered-College-Website-Chatbot/
 │
 ├── NexaAI.py
 ├── requirements.txt
-├── .env
-├── .gitignore
 └── README.md
 ```
 
-> **Important:** Never upload your `.env` file or Gemini API key to GitHub.
+### File Description
+
+| File               | Description                        |
+| ------------------ | ---------------------------------- |
+| `NexaAI.py`        | Main Streamlit chatbot application |
+| `requirements.txt` | Required Python libraries          |
+| `README.md`        | Project documentation              |
 
 ---
 
@@ -178,7 +170,7 @@ git clone YOUR_GITHUB_REPOSITORY_URL
 cd AI-Powered-College-Website-Chatbot
 ```
 
-### 2. Install Dependencies
+### 2. Install Required Libraries
 
 ```bash
 pip install -r requirements.txt
@@ -186,13 +178,9 @@ pip install -r requirements.txt
 
 ### 3. Configure Gemini API
 
-Create a `.env` file:
+Add your Gemini API key according to your application's configuration.
 
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-Never publish your real API key.
+For Streamlit deployment, use the application's **Secrets** settings to store the API key securely.
 
 ### 4. Run the Application
 
@@ -200,21 +188,7 @@ Never publish your real API key.
 streamlit run NexaAI.py
 ```
 
-The chatbot will open in your browser.
-
----
-
-## 🌐 Deployment
-
-The application can be deployed using Streamlit Community Cloud.
-
-For deployment, add your Gemini API key to the application's Secrets:
-
-```toml
-GEMINI_API_KEY = "your_gemini_api_key_here"
-```
-
-The API key should not be included directly in the Python source code.
+The chatbot will open in your web browser.
 
 ---
 
@@ -248,35 +222,15 @@ How can I contact the admission office?
 
 ---
 
-## 🔐 Security
+## 🧠 How the Chatbot Works
 
-The project uses environment variables and deployment secrets to protect the Gemini API key.
-
-### Security practices
-
-* API keys are stored outside the source code.
-* `.env` should be included in `.gitignore`.
-* API keys should never be committed to GitHub.
-* Deployment secrets should be used for production deployment.
-
----
-
-## 🚀 Future Enhancements
-
-Future versions can include:
-
-* 🔎 College website knowledge-base integration
-* 📄 PDF/document question answering
-* 🧠 Retrieval-Augmented Generation (RAG)
-* 🗃️ College database integration
-* 🌐 Multiple language support
-* 🎤 Voice input
-* 🔊 Voice responses
-* 📱 Mobile-friendly design
-* 📊 Admin dashboard
-* 📰 College announcements
-* 📅 Event and academic-calendar integration
-* 🔗 Links to relevant college website pages
+1. The user enters a question.
+2. The Streamlit application receives the question.
+3. The question is sent to the Gemini API.
+4. Gemini processes the user's request.
+5. The AI generates a response.
+6. The response is displayed in the chatbot interface.
+7. Previous messages are maintained during the conversation.
 
 ---
 
@@ -288,16 +242,16 @@ Students, parents, and visitors often need to search through multiple college we
 
 ### Solution
 
-An AI-powered chatbot that allows users to ask questions naturally and receive instant responses using the **Google Gemini API**.
+An AI-powered chatbot that allows users to ask questions naturally and receive instant responses using Google Gemini.
 
-### Impact
+### Benefits
 
-* ⚡ Faster access to college information
+* ⚡ Faster access to information
 * 🤖 24/7 AI assistance
 * 🎓 Better student experience
-* 🔎 Easier website navigation
+* 🔎 Easier information discovery
 * 💬 Natural-language interaction
-* ⏱️ Reduced time spent searching for information
+* ⏱️ Reduced search time
 
 ---
 
@@ -312,17 +266,28 @@ An AI-powered chatbot that allows users to ask questions naturally and receive i
 
 ---
 
-## 🧠 AI Technology
+## 🚀 Future Enhancements
 
-This project uses the **Google Gemini API** as its AI engine.
+* 🔎 College website knowledge-base integration
+* 📄 PDF and document question answering
+* 🧠 Retrieval-Augmented Generation (RAG)
+* 🗃️ College database integration
+* 🌐 Multiple language support
+* 🎤 Voice input
+* 🔊 Voice responses
+* 📱 Mobile-friendly interface
+* 📊 Admin dashboard
+* 📰 College announcements
+* 📅 Event and academic-calendar integration
+* 🔗 Links to relevant college website pages
 
-Gemini enables the chatbot to:
+---
 
-* Understand natural-language questions
-* Maintain conversational context
-* Generate helpful responses
-* Explain complex topics in simple language
-* Assist users with college-related queries
+## 🔐 Security
+
+The Gemini API key should **not be publicly exposed** in the source code or GitHub repository.
+
+For deployment, configure the API key using **Streamlit Secrets**.
 
 ---
 
@@ -336,13 +301,15 @@ This project is developed for educational and hackathon purposes.
 
 **Project Name:** AI-Powered College Website Chatbot
 
-**AI Model:** Google Gemini
+**AI Technology:** Google Gemini API
 
 **Frontend:** Streamlit
 
 **Programming Language:** Python
 
-**Purpose:** AI-powered college information and student assistance
+**Project Type:** AI / Education / Chatbot
+
+**Purpose:** Intelligent college information and student assistance
 
 **Version:** 1.0
 
@@ -350,6 +317,6 @@ This project is developed for educational and hackathon purposes.
 
 ## ⭐ Conclusion
 
-The **AI-Powered College Website Chatbot** combines **Python, Streamlit, and Google Gemini AI** to create an intelligent and user-friendly college information assistant.
+The **AI-Powered College Website Chatbot** combines **Python, Streamlit, and Google Gemini AI** to provide an intelligent and user-friendly college information assistant.
 
-Instead of manually searching through multiple pages, users can simply ask questions and interact with the college website through natural conversation.
+Users can ask questions naturally instead of manually searching through multiple college website pages, making access to educational information faster, simpler, and more interactive.
