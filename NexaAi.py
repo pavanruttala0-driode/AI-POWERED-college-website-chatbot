@@ -51,7 +51,7 @@ def local_fallback_reply(query):
 # Sidebar
 with st.sidebar:
     st.title("🎓 NexGenAI")
-    st.caption("Silicon Valley Campus • San Jose, CA")
+    st.caption("AI ASSISTENT")
     st.markdown("---")
     st.subheader("🏛️ Campus Overview")
     col1, col2 = st.columns(2)
