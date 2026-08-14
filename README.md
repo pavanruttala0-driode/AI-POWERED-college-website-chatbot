@@ -1,322 +1,190 @@
-# 🎓 AI-Powered College Website Chatbot
+🎓 NexaAI College Assistant
 
-An AI-powered chatbot designed to help students, parents, applicants, faculty, and visitors quickly find information about a college.
+NexaAI College Assistant is an AI-powered conversational assistant designed to help students, parents, and visitors get useful information about colleges, courses, admissions, fees, scholarships, campus facilities, placements, internships, and career opportunities.
 
-The chatbot uses the **Google Gemini API** to understand natural-language questions and provide intelligent responses through a user-friendly Streamlit interface.
+The application is built with Streamlit and powered by the Google Gemini API.
 
----
+✨ Features
 
-## 🚀 Project Overview
+- 🤖 AI-powered conversational chatbot
+- 🏫 College-specific question support
+- 🎓 Courses and department information
+- 📝 Admission and eligibility guidance
+- 💰 Fees and scholarship information
+- 🏠 Hostel and campus facilities
+- 💼 Placement and internship guidance
+- 📚 Academic and examination-related assistance
+- 🔎 College comparison and general college guidance
+- 🚀 Career guidance
+- 💬 Conversation context for follow-up questions
+- ⚡ Quick-question buttons
+- 📱 Responsive Streamlit interface
+- 🔐 Secure Gemini API key configuration through Streamlit Secrets
+- 📚 Optional local "knowledge.json" knowledge base
 
-College websites contain a large amount of information about admissions, courses, fees, scholarships, departments, facilities, placements, examinations, and campus services.
+🛠️ Technologies Used
 
-Instead of searching through multiple pages, users can simply ask the chatbot a question and receive an AI-generated response.
+- Python
+- Streamlit
+- Google Gemini API
+- Google GenAI Python SDK
+- JSON Knowledge Base
 
-### Example
+📁 Project Structure
 
-**User:**
-
-> What courses does the college offer?
-
-**Chatbot:**
-
-> The college offers various undergraduate and postgraduate programs. You can ask me about a specific course or department for more information.
-
----
-
-## 🎯 Problem Statement
-
-Students and visitors often spend a lot of time searching college websites for specific information.
-
-The chatbot provides a simple conversational solution that allows users to ask questions naturally and get quick responses.
-
----
-
-## 💡 Proposed Solution
-
-The **AI-Powered College Website Chatbot** provides a conversational interface powered by the **Google Gemini API**.
-
-Users can ask questions about the college, and the chatbot processes the question and generates an appropriate response.
-
----
-
-## ✨ Features
-
-### 🎓 Admissions
-
-* Admission process
-* Eligibility requirements
-* Application information
-* Required documents
-* Admission FAQs
-
-### 📚 Courses & Departments
-
-* Available courses
-* Departments
-* Academic programs
-* Course-related questions
-
-### 💰 Fees & Scholarships
-
-* Fee information
-* Scholarship information
-* Financial assistance questions
-
-### 🏫 Campus Facilities
-
-* Library
-* Laboratories
-* Hostel
-* Canteen
-* Transportation
-* Other campus facilities
-
-### 💼 Placements
-
-* Placement information
-* Career opportunities
-* Recruiters
-* Training and placement questions
-
-### 📝 Examinations
-
-* Examination information
-* Academic questions
-* Semester-related information
-
-### 📞 Contact & Location
-
-* College contact information
-* Department information
-* Campus location
-* Administrative information
-
----
-
-## 🛠️ Technologies Used
-
-* **Python** — Programming language
-* **Streamlit** — Web application framework
-* **Google Gemini API** — Artificial intelligence and natural-language processing
-* **HTML/CSS** — User interface design
-
----
-
-## 🏗️ System Architecture
-
-```text
-                    ┌─────────────────┐
-                    │      User       │
-                    └────────┬────────┘
-                             │
-                             ▼
-                  ┌─────────────────────┐
-                  │   Streamlit Web App │
-                  │    Chat Interface   │
-                  └──────────┬──────────┘
-                             │
-                             ▼
-                  ┌─────────────────────┐
-                  │  Chatbot Processing │
-                  └──────────┬──────────┘
-                             │
-                             ▼
-                  ┌─────────────────────┐
-                  │     Gemini API      │
-                  │    AI Processing    │
-                  └──────────┬──────────┘
-                             │
-                             ▼
-                  ┌─────────────────────┐
-                  │   AI Generated      │
-                  │      Response       │
-                  └──────────┬──────────┘
-                             │
-                             ▼
-                    ┌─────────────────┐
-                    │      User       │
-                    └─────────────────┘
-```
-
----
-
-## 📂 Project Structure
-
-```text
-AI-Powered-College-Website-Chatbot/
+NexaAI-College-Assistant/
 │
-├── NexaAI.py
+├── app.py
+├── knowledge.json
 ├── requirements.txt
 └── README.md
-```
 
-### File Description
+🚀 Getting Started
 
-| File               | Description                        |
-| ------------------ | ---------------------------------- |
-| `NexaAI.py`        | Main Streamlit chatbot application |
-| `requirements.txt` | Required Python libraries          |
-| `README.md`        | Project documentation              |
+1. Clone the repository
 
----
+git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
+cd YOUR-REPOSITORY
 
-## ⚙️ Installation
+2. Install dependencies
 
-### 1. Clone the Repository
-
-```bash
-git clone YOUR_GITHUB_REPOSITORY_URL
-cd AI-Powered-College-Website-Chatbot
-```
-
-### 2. Install Required Libraries
-
-```bash
 pip install -r requirements.txt
-```
 
-### 3. Configure Gemini API
+Your "requirements.txt" should contain:
 
-Add your Gemini API key according to your application's configuration.
+streamlit
+google-genai
 
-For Streamlit deployment, use the application's **Secrets** settings to store the API key securely.
+3. Configure Gemini API
 
-### 4. Run the Application
+Create a Gemini API key using Google AI Studio.
 
-```bash
-streamlit run NexaAI.py
-```
+Do not put the API key directly inside "app.py" or upload it to GitHub.
 
-The chatbot will open in your web browser.
+For local development, configure the key using your environment or Streamlit secrets.
 
----
+For Streamlit Cloud, add the following under App Settings → Secrets:
 
-## 💬 Sample Questions
+GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
 
-Users can ask questions such as:
+4. Run the application
 
-```text
-What courses does the college offer?
+streamlit run app.py
 
-How can I apply for admission?
+The application will open in your browser.
 
-What is the eligibility for B.Tech?
+☁️ Deploy on Streamlit Community Cloud
 
-What is the fee structure?
+1. Push the project to GitHub.
+2. Open Streamlit Community Cloud.
+3. Select your GitHub repository.
+4. Select "app.py" as the main file.
+5. Deploy the application.
+6. Open Settings → Secrets.
+7. Add:
 
-Are scholarships available?
+GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
 
-Does the college provide hostel facilities?
+8. Save the secret and reboot the application.
 
-What campus facilities are available?
+🔐 Security
 
-What companies recruit students?
+Never commit your Gemini API key to GitHub.
 
-What are the placement opportunities?
+❌ Don't do this:
 
-Where is the college located?
+api_key = "YOUR_REAL_API_KEY"
 
-How can I contact the admission office?
-```
+✅ Use Streamlit Secrets:
 
----
+api_key = st.secrets.get("GEMINI_API_KEY")
 
-## 🧠 How the Chatbot Works
+If an API key is accidentally published, revoke it and create a new one.
 
-1. The user enters a question.
-2. The Streamlit application receives the question.
-3. The question is sent to the Gemini API.
-4. Gemini processes the user's request.
-5. The AI generates a response.
-6. The response is displayed in the chatbot interface.
-7. Previous messages are maintained during the conversation.
+💡 Example Questions
 
----
+Users can ask:
 
-## 🏆 Hackathon Impact
+What courses are available?
 
-### Problem
+What are the admission requirements?
 
-Students, parents, and visitors often need to search through multiple college website pages to find specific information.
+Tell me about B.Tech CSE.
 
-### Solution
+What scholarships are available?
 
-An AI-powered chatbot that allows users to ask questions naturally and receive instant responses using Google Gemini.
+What facilities does the college provide?
 
-### Benefits
+Tell me about hostel facilities.
 
-* ⚡ Faster access to information
-* 🤖 24/7 AI assistance
-* 🎓 Better student experience
-* 🔎 Easier information discovery
-* 💬 Natural-language interaction
-* ⏱️ Reduced search time
+How do placements work?
 
----
+What career opportunities are available after ECE?
 
-## 👥 Target Users
+Compare CSE and ECE.
 
-* 👨‍🎓 Students
-* 👩‍🎓 Prospective students
-* 👨‍👩‍👧 Parents
-* 👨‍🏫 Faculty
-* 🧑‍💼 College staff
-* 🌐 Website visitors
+What documents are required for admission?
 
----
+For college-specific questions, users can enter the college name and then ask their question.
 
-## 🚀 Future Enhancements
+🧠 How It Works
 
-* 🔎 College website knowledge-base integration
-* 📄 PDF and document question answering
-* 🧠 Retrieval-Augmented Generation (RAG)
-* 🗃️ College database integration
-* 🌐 Multiple language support
-* 🎤 Voice input
-* 🔊 Voice responses
-* 📱 Mobile-friendly interface
-* 📊 Admin dashboard
-* 📰 College announcements
-* 📅 Event and academic-calendar integration
-* 🔗 Links to relevant college website pages
+User
+  ↓
+NexaAI College Assistant
+  ↓
+College / User Context
+  ↓
+Gemini AI
+  ↓
+AI-generated Response
+  ↓
+Student
 
----
+The application combines the Gemini AI model with an optional local "knowledge.json" file to provide contextual answers.
 
-## 🔐 Security
+⚠️ Information Accuracy
 
-The Gemini API key should **not be publicly exposed** in the source code or GitHub repository.
+NexaAI should not be treated as an official source for time-sensitive information such as:
 
-For deployment, configure the API key using **Streamlit Secrets**.
+- Current admission deadlines
+- Exact fees
+- Current placement statistics
+- Latest notices
+- Official rankings
+- Faculty changes
 
----
+Users should verify important information through the respective college's official sources.
 
-## 📜 License
+🔮 Future Enhancements
 
-This project is developed for educational and hackathon purposes.
+- 🌐 Live college website search
+- 📰 Real-time college notices
+- 📅 Admission deadline tracking
+- 📍 College location and map integration
+- 🔎 Advanced college discovery
+- 📊 College comparison dashboard
+- 📄 PDF/document-based college knowledge
+- 🗣️ Voice-based interaction
+- 🌍 Multilingual support
+- 👨‍🎓 Personalized student dashboard
 
----
+🎯 Project Goal
 
-## 👨‍💻 Project Information
+The goal of NexaAI College Assistant is to make college-related information easier to access through a simple conversational AI interface.
 
-**Project Name:** AI-Powered College Website Chatbot
+Instead of searching through multiple pages and documents, students can ask questions naturally and receive relevant guidance from one assistant.
 
-**AI Technology:** Google Gemini API
+👨‍💻 Project
 
-**Frontend:** Streamlit
+Project Name: NexaAI College Assistant
 
-**Programming Language:** Python
+Category: Artificial Intelligence / Education Technology
 
-**Project Type:** AI / Education / Chatbot
-
-**Purpose:** Intelligent college information and student assistance
-
-**Version:** 1.0
+Built With: Python, Streamlit & Google Gemini API
 
 ---
 
-## ⭐ Conclusion
+⭐ If you find this project useful
 
-The **AI-Powered College Website Chatbot** combines **Python, Streamlit, and Google Gemini AI** to provide an intelligent and user-friendly college information assistant.
-
-Users can ask questions naturally instead of manually searching through multiple college website pages, making access to educational information faster, simpler, and more interactive.
+Give the repository a ⭐ on GitHub!
