@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import streamlit as st
 
 # =========================================================
@@ -56,6 +57,13 @@ st.markdown("""
         background: rgba(128,128,128,0.06);
         margin-bottom: 20px;
     }
+
+    .status-box {
+        padding: 12px 16px;
+        border-radius: 12px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -81,7 +89,7 @@ def load_knowledge():
 KNOWLEDGE_BASE = load_knowledge()
 
 # =========================================================
-# GEMINI API
+# GEMINI API CONFIGURATION
 # =========================================================
 
 api_key = None
@@ -94,21 +102,38 @@ except Exception:
 if not api_key:
     api_key = os.environ.get("GEMINI_API_KEY")
 
-
 gemini_client = None
 
 if api_key and api_key != "your_gemini_api_key_here":
+
     try:
         from google import genai
 
-        gemini_client = genai.Client(api_key=api_key)
+        gemini_client = genai.Client(
+            api_key=api_key
+        )
 
     except Exception as e:
-        st.sidebar.error(
-            "Gemini SDK could not be initialized."
-        )
+
+        gemini_client = None
+
 else:
     gemini_client = None
+
+
+# =========================================================
+# GEMINI MODELS
+# =========================================================
+
+# Primary model first.
+# If temporarily unavailable, the app automatically
+# tries the next model.
+
+GEMINI_MODELS = [
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-2.5-flash"
+]
 
 
 # =========================================================
@@ -342,20 +367,59 @@ or
 
 
 # =========================================================
+# CHECK IF ERROR IS TEMPORARY
+# =========================================================
+
+def is_temporary_error(error_text):
+
+    temporary_words = [
+        "503",
+        "UNAVAILABLE",
+        "high demand",
+        "temporarily",
+        "try again later",
+        "overloaded",
+        "service unavailable",
+        "deadline exceeded",
+        "429",
+        "rate limit",
+        "resource exhausted"
+    ]
+
+    error_lower = error_text.lower()
+
+    return any(
+        word.lower() in error_lower
+        for word in temporary_words
+    )
+
+
+# =========================================================
 # GEMINI RESPONSE
 # =========================================================
 
 def get_gemini_response(user_query):
 
     if not gemini_client:
-        return local_fallback_reply(user_query)
+        return """
+⚠️ **Gemini API is not configured.**
 
-    try:
+Please check your Streamlit Secret:
 
-        knowledge_context = ""
+`GEMINI_API_KEY`
 
-        if KNOWLEDGE_BASE:
-            knowledge_context = f"""
+Make sure the secret name is exactly the same.
+"""
+
+    # -----------------------------------------------------
+    # KNOWLEDGE BASE
+    # -----------------------------------------------------
+
+    knowledge_context = ""
+
+    if KNOWLEDGE_BASE:
+
+        knowledge_context = f"""
 LOCAL KNOWLEDGE BASE:
 
 {json.dumps(
@@ -365,60 +429,129 @@ LOCAL KNOWLEDGE BASE:
 )}
 """
 
-        history = ""
+    # -----------------------------------------------------
+    # CONVERSATION HISTORY
+    # -----------------------------------------------------
 
-        for message in st.session_state.messages[-10:]:
-            role = message["role"]
+    history = ""
 
-            if role == "user":
-                history += f"User: {message['content']}\n"
+    for message in st.session_state.messages[-10:]:
 
-            elif role == "assistant":
-                history += f"NexaAI: {message['content']}\n"
+        role = message["role"]
 
-        prompt = f"""
+        if role == "user":
+
+            history += (
+                f"User: {message['content']}\n"
+            )
+
+        elif role == "assistant":
+
+            history += (
+                f"NexaAI: {message['content']}\n"
+            )
+
+    # -----------------------------------------------------
+    # PROMPT
+    # -----------------------------------------------------
+
+    prompt = f"""
 {SYSTEM_INSTRUCTION}
 
 {knowledge_context}
 
 CONVERSATION HISTORY:
+
 {history}
 
 CURRENT USER QUESTION:
+
 {user_query}
 
 Answer the user now.
 
 Remember:
+
 - Do not invent unknown college facts.
 - If a college name is provided, answer specifically about that college.
 - If exact information is unavailable, say so.
 - Use Markdown.
 - Keep the answer useful and easy to understand.
+- Do not mention internal API errors.
 """
 
-        response = gemini_client.models.generate_content(
-            model="gemini-3.6-flash",
-            contents=prompt
-        )
+    # -----------------------------------------------------
+    # TRY MODELS
+    # -----------------------------------------------------
 
-        if response and response.text:
-            return response.text.strip()
+    errors = []
 
-        return local_fallback_reply(user_query)
+    for model_name in GEMINI_MODELS:
 
-    except Exception as e:
+        # Try each model up to 2 times
+        for attempt in range(2):
 
-        return f"""
-⚠️ **I couldn't connect to the AI service right now.**
+            try:
 
-Please check your Gemini API configuration.
+                response = gemini_client.models.generate_content(
+                    model=model_name,
+                    contents=prompt
+                )
 
-If the problem continues, verify that your Streamlit Secret is:
+                if response and response.text:
 
-`GEMINI_API_KEY`
+                    return response.text.strip()
 
-**Technical message:** `{str(e)}`
+                errors.append(
+                    f"{model_name}: Empty response"
+                )
+
+                break
+
+            except Exception as e:
+
+                error_text = str(e)
+
+                errors.append(
+                    f"{model_name}: {error_text}"
+                )
+
+                # Retry temporary errors
+                if is_temporary_error(error_text):
+
+                    if attempt == 0:
+                        time.sleep(2)
+                        continue
+
+                    break
+
+                # For non-temporary errors,
+                # move to next model immediately.
+                break
+
+    # -----------------------------------------------------
+    # ALL MODELS FAILED
+    # -----------------------------------------------------
+
+    return f"""
+⚠️ **NexaAI is temporarily unable to reach Gemini.**
+
+This usually happens when the Gemini service is experiencing
+high demand or your API quota/rate limit has been reached.
+
+### You can try:
+
+1. Wait a few seconds and send the question again.
+2. Refresh the Streamlit app.
+3. Check that your Streamlit secret is:
+   `GEMINI_API_KEY`
+4. Make sure your Gemini API key is active.
+
+### Offline assistance
+
+I can still provide basic college guidance without Gemini:
+
+{local_fallback_reply(user_query)}
 """
 
 
@@ -459,7 +592,26 @@ with st.sidebar:
 
     st.markdown("---")
 
-    if st.button("🗑️ Clear Chat", use_container_width=True):
+    # API STATUS
+
+    if gemini_client:
+
+        st.success(
+            "🟢 Gemini AI connected"
+        )
+
+    else:
+
+        st.warning(
+            "🟡 Gemini API not configured"
+        )
+
+    st.markdown("---")
+
+    if st.button(
+        "🗑️ Clear Chat",
+        use_container_width=True
+    ):
 
         st.session_state.messages = [
             {
@@ -513,7 +665,10 @@ st.caption(
     "Optional: Enter a college name to make your questions more specific."
 )
 
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown(
+    "</div>",
+    unsafe_allow_html=True
+)
 
 
 # =========================================================
@@ -527,32 +682,51 @@ col1, col2, col3, col4 = st.columns(4)
 preset_input = None
 
 with col1:
+
     if st.button(
         "🎓 Courses",
         use_container_width=True
     ):
-        preset_input = "What courses and departments are available?"
+
+        preset_input = (
+            "What courses and departments are available?"
+        )
+
 
 with col2:
+
     if st.button(
         "📝 Admissions",
         use_container_width=True
     ):
-        preset_input = "What are the admission requirements and process?"
+
+        preset_input = (
+            "What are the admission requirements and process?"
+        )
+
 
 with col3:
+
     if st.button(
         "💼 Placements",
         use_container_width=True
     ):
-        preset_input = "Tell me about placements and career opportunities."
+
+        preset_input = (
+            "Tell me about placements and career opportunities."
+        )
+
 
 with col4:
+
     if st.button(
         "🏠 Facilities",
         use_container_width=True
     ):
-        preset_input = "What facilities and campus services are available?"
+
+        preset_input = (
+            "What facilities and campus services are available?"
+        )
 
 
 # =========================================================
@@ -602,7 +776,10 @@ for message in st.session_state.messages:
             "assistant",
             avatar="🎓"
         ):
-            st.markdown(message["content"])
+
+            st.markdown(
+                message["content"]
+            )
 
     else:
 
@@ -610,7 +787,10 @@ for message in st.session_state.messages:
             "user",
             avatar="👤"
         ):
-            st.markdown(message["content"])
+
+            st.markdown(
+                message["content"]
+            )
 
 
 # =========================================================
@@ -622,6 +802,7 @@ user_query = st.chat_input(
 )
 
 if preset_input:
+
     user_query = preset_input
 
 
@@ -631,7 +812,10 @@ if preset_input:
 
 if user_query:
 
-    # Add college context if provided
+    # -----------------------------------------------------
+    # ADD COLLEGE CONTEXT
+    # -----------------------------------------------------
+
     final_query = user_query
 
     if college_name.strip():
@@ -646,7 +830,10 @@ User question:
 {user_query}
 """
 
-    # Add user message to UI
+    # -----------------------------------------------------
+    # ADD USER MESSAGE
+    # -----------------------------------------------------
+
     st.session_state.messages.append(
         {
             "role": "user",
@@ -658,26 +845,39 @@ User question:
         "user",
         avatar="👤"
     ):
-        st.markdown(user_query)
 
-    # Generate response
+        st.markdown(
+            user_query
+        )
+
+    # -----------------------------------------------------
+    # GENERATE RESPONSE
+    # -----------------------------------------------------
+
     with st.chat_message(
         "assistant",
         avatar="🎓"
     ):
 
-        with st.spinner("NexaAI is thinking... 🤖"):
+        with st.spinner(
+            "NexaAI is thinking... 🤖"
+        ):
 
             bot_reply = get_gemini_response(
                 final_query
             )
 
-        st.markdown(bot_reply)
+        st.markdown(
+            bot_reply
+        )
 
-    # Save response
+    # -----------------------------------------------------
+    # SAVE RESPONSE
+    # -----------------------------------------------------
+
     st.session_state.messages.append(
         {
             "role": "assistant",
             "content": bot_reply
         }
-    )
+                )
